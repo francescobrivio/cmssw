@@ -15,6 +15,7 @@
 #include "FWCore/Framework/interface/ModuleFactory.h"
 #include "FWCore/Framework/interface/ESProducer.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
 
 #include "DetectorDescription/Core/interface/DDCompactView.h"
 #include "DetectorDescription/DDCMS/interface/DDCompactView.h"
@@ -34,6 +35,8 @@
 #include "Geometry/VeryForwardGeometryBuilder/interface/CTPPSGeometry.h"
 
 #include "Geometry/VeryForwardGeometryBuilder/interface/CTPPSGeometryESCommon.h"
+
+#include "CondCore/DBOutputService/interface/PoolDBOutputService.h"
 
 #include <regex>
 
@@ -94,6 +97,10 @@ private:
 
   edm::ESGetToken<DetGeomDesc, VeryForwardRealGeometryRecord> dgdRealToken_;
   edm::ESGetToken<DetGeomDesc, VeryForwardMisalignedGeometryRecord> dgdMisToken_;
+
+  edm::Service<cond::service::PoolDBOutputService> dbService_;
+  PDetGeomDesc::Item buildItemFromDetGeomDesc(const DetGeomDesc* geoInfo);
+  void buildSerializableDataFromGeoInfo(PDetGeomDesc* serializableData, const DetGeomDesc* geoInfo, int& counter);
 };
 
 CTPPSGeometryESModule::CTPPSGeometryESModule(const edm::ParameterSet& iConfig)
@@ -231,6 +238,41 @@ std::unique_ptr<DetGeomDesc> CTPPSGeometryESModule::produceGD(
 
 std::unique_ptr<DetGeomDesc> CTPPSGeometryESModule::produceRealGDFromPreprocessedDB(
     const VeryForwardRealGeometryRecord& iRecord) {
+
+  std::cout << "------------------------> Entering produceRealGDFromPreprocessedDB <------------------------" << std::endl;
+
+  // Get DetGeomDesc tree (std::unique_ptr<DetGeomDesc>)
+  auto geoInfoRoot = produceGD(iRecord.getRecord<VeryForwardIdealGeometryRecord>(),
+                  iRecord.tryToGetRecord<RPRealAlignmentRecord>(),
+                  idealDBGDToken_,
+                  realAlignmentToken_,
+                  "CTPPSGeometryESModule::produceRealGDFromPreprocessedDB");
+  std::cout << "------------------------> Gotten geoInfoRoot <------------------------" << std::endl;
+
+  // Build persistent geometry data from geometry
+  PDetGeomDesc serializableData;  // cond::service::PoolDBOutputService::writeOne interface requires raw pointer.
+  int counter = 0;
+  if (geoInfoRoot) {
+    buildSerializableDataFromGeoInfo(&serializableData, geoInfoRoot.get(), counter);
+  }
+  else {
+    throw cms::Exception("CTPPSGeometryESModule") << "geoInfoRoot not available";
+  }
+  std::cout << "------------------------> Built serializableData <------------------------" << std::endl;
+
+  // Save geometry in the database
+  if (serializableData.container_.empty()) {
+    throw cms::Exception("CTPPSGeometryESModule") << "PDetGeomDesc is empty, no geometry to save in the database.";
+  } else {
+    std::cout << "------------------------> serializableData container not empty <------------------------" << std::endl;
+    if (dbService_.isAvailable()) {
+      dbService_->writeOneIOV(serializableData, dbService_->beginOfTime(), "VeryForwardIdealGeometryRecord");
+      std::cout << "------------------------> Successfully wrote DB, with " << serializableData.container_.size() << " PDetGeomDesc items. <------------------------" << std::endl;
+    } else {
+      throw cms::Exception("CTPPSGeometryESModule") << "PoolDBService required.";
+    }
+  }
+
   return produceGD(iRecord.getRecord<VeryForwardIdealGeometryRecord>(),
                    iRecord.tryToGetRecord<RPRealAlignmentRecord>(),
                    idealDBGDToken_,
@@ -239,7 +281,59 @@ std::unique_ptr<DetGeomDesc> CTPPSGeometryESModule::produceRealGDFromPreprocesse
 }
 
 //----------------------------------------------------------------------------------------------------
+/*
+ * Build persistent data items to be stored in DB (PDetGeomDesc) from geo info (DetGeomDesc).
+ * Recursive, depth-first search.
+ */
+void CTPPSGeometryESModule::buildSerializableDataFromGeoInfo(PDetGeomDesc* serializableData,
+                                                          const DetGeomDesc* geoInfo,
+                                                          int& counter) {
+  PDetGeomDesc::Item serializableItem = buildItemFromDetGeomDesc(geoInfo);
+  counter++;
 
+  // Store item in serializableData
+  if ((!fromDD4hep_ && counter >= 2)       // Old DD: Skip CMSE
+      || (fromDD4hep_ && counter >= 4)) {  // DD4hep: Skip world + OCMS + CMSE
+    serializableData->container_.emplace_back(serializableItem);
+  }
+
+  // Recursive calls on children
+  for (auto& child : geoInfo->components()) {
+    buildSerializableDataFromGeoInfo(serializableData, child, counter);
+  }
+}
+
+//----------------------------------------------------------------------------------------------------
+/*
+ * Build Item from DetGeomDesc info.
+ */
+PDetGeomDesc::Item CTPPSGeometryESModule::buildItemFromDetGeomDesc(const DetGeomDesc* geoInfo) {
+  PDetGeomDesc::Item result;
+  result.dx_ = geoInfo->translation().X();
+  result.dy_ = geoInfo->translation().Y();
+  result.dz_ = geoInfo->translation().Z();
+
+  const DDRotationMatrix& rot = geoInfo->rotation();
+  rot.GetComponents(result.axx_,
+                    result.axy_,
+                    result.axz_,
+                    result.ayx_,
+                    result.ayy_,
+                    result.ayz_,
+                    result.azx_,
+                    result.azy_,
+                    result.azz_);
+  result.name_ = geoInfo->name();
+  result.params_ = geoInfo->params();
+  result.copy_ = geoInfo->copyno();
+  result.z_ = geoInfo->parentZPosition();
+  result.sensorType_ = geoInfo->sensorType();
+  result.geographicalID_ = geoInfo->geographicalID();
+
+  return result;
+}
+
+//----------------------------------------------------------------------------------------------------
 std::unique_ptr<DetGeomDesc> CTPPSGeometryESModule::produceMisalignedGDFromPreprocessedDB(
     const VeryForwardMisalignedGeometryRecord& iRecord) {
   return produceGD(iRecord.getRecord<VeryForwardIdealGeometryRecord>(),

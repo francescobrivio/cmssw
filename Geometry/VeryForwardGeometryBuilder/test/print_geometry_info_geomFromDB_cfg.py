@@ -12,15 +12,13 @@ process.MessageLogger = cms.Service("MessageLogger",
     )
 )
 
-# geometry
+# input/output databases (in this case local sqlite files)
 process.load("CondCore.CondDB.CondDB_cfi")
-# input database (in this case local sqlite file)
-#process.CondDB.connect = 'sqlite_file:../../CondTools/Geometry/PPSGeometry_oldDD_multiIOV.db'
-process.CondDB.connect = cms.string( 'frontier://FrontierPrep/CMS_CONDITIONS' )
-
+#process.CondDB.connect = 'sqlite_file:PPS_RecoGeometry_test_v1.db'
+process.CondDB.connect = 'frontier://FrontierPrep/CMS_CONDITIONS'
 process.PoolDBESSource = cms.ESSource("PoolDBESSource",
     process.CondDB,
-    DumpStat=cms.untracked.bool(True),
+    DumpStat=cms.untracked.bool(False), #True
     toGet = cms.VPSet(
       cms.PSet(
         record = cms.string('VeryForwardIdealGeometryRecord'),
@@ -29,6 +27,18 @@ process.PoolDBESSource = cms.ESSource("PoolDBESSource",
     )
 )
 
+process.newCondDB = process.CondDB.clone()
+process.newCondDB.connect = 'sqlite_file:dataout.db'
+process.PoolDBOutputService = cms.Service("PoolDBOutputService",
+    process.newCondDB,
+    timetype = cms.untracked.string('runnumber'),
+    toPut = cms.VPSet(cms.PSet(
+        record = cms.string('VeryForwardIdealGeometryRecord'),
+        tag = cms.string('PPSGeometry_test')
+    ))
+)
+
+# geometry
 process.ctppsGeometryESModule = cms.ESProducer("CTPPSGeometryESModule",
     fromPreprocessedDB = cms.untracked.bool(True),
     fromDD4hep = cms.untracked.bool(False),
