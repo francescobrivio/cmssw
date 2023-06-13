@@ -49,11 +49,22 @@ OnlineBeamSpotESProducer::OnlineBeamSpotESProducer(const edm::ParameterSet& p)
       sigmaXYThreshold_(p.getParameter<double>("sigmaXYThreshold") * 1E-4) {
   auto cc = setWhatProduced(this);
 
+  std::cout << " --------------------------->  USING ESPRODUCER <---------------------------" << std::endl;
   fakeBS_.setBeamWidthX(0.1);
   fakeBS_.setBeamWidthY(0.1);
   fakeBS_.setSigmaZ(15.);
-  fakeBS_.setPosition(0.0001, 0.0001, 0.0001);
+  //fakeBS_.setPosition(0.0001, 0.0001, 0.0001);
+  fakeBS_.setPosition(0.1, -0.2, -0.2);
   fakeBS_.setType(-1);
+
+  //// Set diagonal covariance, i.e. errors on the parameters
+  //for (int i = 0; i < 7; ++i) {
+  //  for (int j = 0; j < 7; ++j) {
+  //    if(i==j){
+  //     fakeBS_.setCovariance(i, j, 0.1);
+  //    }
+  //  }
+  //}
 
   bsHLTToken_ = cc.consumesFrom<BeamSpotOnlineObjects, BeamSpotOnlineHLTObjectsRcd>();
   bsLegacyToken_ = cc.consumesFrom<BeamSpotOnlineObjects, BeamSpotOnlineLegacyObjectsRcd>();
@@ -166,8 +177,10 @@ std::shared_ptr<const BeamSpotObjects> OnlineBeamSpotESProducer::produce(const B
     best = checkSingleBS(&hltRec->get(bsHLTToken_));
   }
   if (best) {
+    std::cout << " --------------------------->  USING BEST <---------------------------" << std::endl;
     return std::shared_ptr<const BeamSpotObjects>(best, edm::do_nothing_deleter());
   } else {
+    std::cout << " --------------------------->  USING FAKE <---------------------------" << std::endl;
     return std::shared_ptr<const BeamSpotObjects>(&fakeBS_, edm::do_nothing_deleter());
     edm::LogInfo("OnlineBeamSpotESProducer")
         << "None of the Online BeamSpots in the ES is suitable, \n returning a fake one. ";

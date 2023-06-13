@@ -206,7 +206,8 @@ def customiseForOffline(process):
     #       if the configuration uses "(BeamSpotOnlineProducer).useTransientRecord = True".
     # See CMSHLT-2271 and CMSHLT-2300 for further details.
     for prod in esproducers_by_type(process, 'OnlineBeamSpotESProducer'):
-        prod.timeThreshold = int(1e6)
+        #prod.timeThreshold = int(1e6)
+        prod.timeThreshold = int(48)
 
     return process
 
