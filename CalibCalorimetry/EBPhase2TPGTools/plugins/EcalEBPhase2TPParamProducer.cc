@@ -104,11 +104,13 @@ EcalEBPhase2TPParamProducer::EcalEBPhase2TPParamProducer(edm::ParameterSet const
   inFile->GetObject("average-pulse", thePulse_);
   delete inFile;
 
-  if ( binOfMaximum_!=6 || binOfMaximum_!=8 )
-    edm::LogError("EcalEBPhase2TPParamProducer") << " Values for binOfMaximum is wrong, The default binOfMaximum=6  will be used";
-  
-  if ( nSamplesToUse_!=6 || nSamplesToUse_!=8 || nSamplesToUse_!=12 )
-    edm::LogError("EcalEBPhase2TPParamProducer") << " Values for nSamplesToUse is wrong, The default nSamplesToUse=8 will be used";
+  if (binOfMaximum_ != 6 || binOfMaximum_ != 8)
+    edm::LogError("EcalEBPhase2TPParamProducer")
+        << " Values for binOfMaximum is wrong, The default binOfMaximum=6  will be used";
+
+  if (nSamplesToUse_ != 6 || nSamplesToUse_ != 8 || nSamplesToUse_ != 12)
+    edm::LogError("EcalEBPhase2TPParamProducer")
+        << " Values for nSamplesToUse is wrong, The default nSamplesToUse=8 will be used";
 }
 
 EcalEBPhase2TPParamProducer::~EcalEBPhase2TPParamProducer() { gzclose(out_file_); }
