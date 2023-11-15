@@ -106,11 +106,11 @@ EcalEBPhase2TPParamProducer::EcalEBPhase2TPParamProducer(edm::ParameterSet const
 
   if (binOfMaximum_ != 6 && binOfMaximum_ != 8)
     edm::LogError("EcalEBPhase2TPParamProducer")
-      << " Value for binOfMaximum " << binOfMaximum_ << " is wrong, The default binOfMaximum=6  will be used";
+        << " Value for binOfMaximum " << binOfMaximum_ << " is wrong, The default binOfMaximum=6  will be used";
 
   if (nSamplesToUse_ != 6 && nSamplesToUse_ != 8 && nSamplesToUse_ != 12)
     edm::LogError("EcalEBPhase2TPParamProducer")
-      << " Value for nSamplesToUse " << nSamplesToUse_ << " is wrong, The default nSamplesToUse=8 will be used";
+        << " Value for nSamplesToUse " << nSamplesToUse_ << " is wrong, The default nSamplesToUse=8 will be used";
 }
 
 EcalEBPhase2TPParamProducer::~EcalEBPhase2TPParamProducer() { gzclose(out_file_); }
@@ -294,7 +294,6 @@ std::vector<int> EcalEBPhase2TPParamProducer::computeWeights(int type) {
       clockSampleSet = {0, 1, 2, 3, 4, 5, 6, 7};
       break;
   }
-
 
   getPulseSampleSet(*thePulse_, phaseShift_, sampleSet);
   pulseDot_ = new TGraph();
