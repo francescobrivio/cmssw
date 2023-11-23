@@ -89,6 +89,12 @@ PAYLOAD_2XML_MODULE(pluginUtilities_payload2xml) {
   PAYLOAD_2XML_CLASS(EcalCondTowerObjectContainer<EcalChannelStatusCode>);
   PAYLOAD_2XML_CLASS(EcalCondTowerObjectContainer<EcalDAQStatusCode>);
   PAYLOAD_2XML_CLASS(EcalCondTowerObjectContainer<EcalDQMStatusCode>);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGAmplWeightIdMap);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGAmplWeights);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGLinearizationConstant);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGPedestal);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGTimeWeightIdMap);
+  PAYLOAD_2XML_CLASS(EcalEBPhase2TPGTimeWeights);
   PAYLOAD_2XML_CLASS(EcalFunParams);
   PAYLOAD_2XML_CLASS(EcalLaserAPDPNRatios);
   PAYLOAD_2XML_CLASS(EcalMustacheSCParameters);
