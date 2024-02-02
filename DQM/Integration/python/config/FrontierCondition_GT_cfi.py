@@ -14,9 +14,9 @@ GlobalTag.globaltag = autoCond['run3_hlt']
 ##############################################
 GlobalTag.toGet = cms.VPSet(
     cms.PSet( record = cms.string( "BeamSpotOnlineLegacyObjectsRcd" ),
-              refreshTime = cms.uint64( 1 ),
+              refreshTime = cms.uint64( 2 ),
             ),
     cms.PSet( record = cms.string( "BeamSpotOnlineHLTObjectsRcd" ),
-              refreshTime = cms.uint64( 1 )
+              refreshTime = cms.uint64( 2 )
             )
 )

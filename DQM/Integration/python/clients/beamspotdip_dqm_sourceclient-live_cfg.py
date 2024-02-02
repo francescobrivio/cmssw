@@ -40,7 +40,7 @@ process.load("DQM.Integration.config.FrontierCondition_GT_cfi")
 process.GlobalTag.toGet = cms.VPSet(
   cms.PSet(
     record = cms.string("BeamSpotOnlineLegacyObjectsRcd"),
-    refreshTime = cms.uint64(1)
+    refreshTime = cms.uint64(2)
   ),
 )
 
